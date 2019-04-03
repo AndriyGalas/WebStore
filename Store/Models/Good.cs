@@ -4,9 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace Store.Models
 {
-    /// <summary>
-    /// Good model for create entity in database
-    /// </summary>
     public class Good
     {
         public Good()
