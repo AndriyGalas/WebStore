@@ -1,2 +1,2 @@
-# TeamProject
-Team project on theme : Online store
+# Online store
+Web project on theme : Online store
