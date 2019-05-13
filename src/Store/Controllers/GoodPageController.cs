@@ -30,12 +30,14 @@ namespace Store.Controllers
         [HttpPost]
         public async Task<IActionResult> LeaveReview(int id, string reviewArea)
         {
-            Customer customer = unitOfWork.Customers.GetAll().Where(c => c.Email == User.Identity.Name).First();
+            Customer customer = unitOfWork.Customers.GetAll().Where(c => c.Email == User.Identity.Name)
+                .FirstOrDefault();
 
             if (customer != null)
             {
                 GoodReview review = new GoodReview
                 {
+                    Good = await unitOfWork.Goods.Get(id),
                     Customer = customer,
                     Date = DateTime.Now,
                     Message = reviewArea,
@@ -53,10 +55,10 @@ namespace Store.Controllers
 
         public async Task<IActionResult> DeleteReview(int id)
         {
-            GoodReview review = unitOfWork.Goods.GetAllReviews().Where(r => r.Id == id).First();
+            GoodReview review = unitOfWork.Reviews.GetAll().Where(r => r.Id == id).First();
             int goodId = review.GoodId;
 
-            unitOfWork.Goods.DeleteReview(review);
+            await unitOfWork.Reviews.Delete(review.Id);
             await unitOfWork.SaveAsync();
 
             return RedirectToAction("ShowGood", new { goodId });

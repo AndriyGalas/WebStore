@@ -130,11 +130,10 @@ namespace Store.Controllers
             {
                 Customer customer = await unitOfWork.Customers.Get(model.Id);
                 ApplicationUser user = await userManager.FindByEmailAsync(customer.Email);
-
                 if (user != null && customer != null)
                 {
                     user.Email = model.Email;
-                    user.UserName = model.FirstName + model.SecondName;
+                    user.UserName = model.Email;
                     user.UpdateTime = DateTime.Now;
 
                     var userRoles = await userManager.GetRolesAsync(user);

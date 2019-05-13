@@ -14,6 +14,7 @@ namespace Store.Controllers
     public class HomeController : Controller
     {
         private readonly UnitOfWork unitOfWork;
+        private static bool firstTimeLogged = true;
 
         public HomeController(AppDbContext appDbContext)
         {
@@ -52,7 +53,7 @@ namespace Store.Controllers
                 FilterModel = filterModel
             };
 
-            return View(model);
+            return RedirectByRole(model);
         }
 
         public IActionResult Filter(IndexViewModel model)
@@ -77,7 +78,7 @@ namespace Store.Controllers
             HttpContext.Session.Set("filter", model.FilterModel);
             HttpContext.Session.Set("goods", goods);
 
-            return RedirectToAction("Index", new { pageNumber = 1 });
+            return RedirectToAction("Index", new { page = 1 });
         }
 
         public IActionResult TypeSearch(string goodType)
@@ -93,7 +94,7 @@ namespace Store.Controllers
             HttpContext.Session.Set("filter", model);
             HttpContext.Session.Set("goods", goods);
 
-            return RedirectToAction("Index", new { pageNumber = 1 });
+            return RedirectToAction("Index", new { page = 1 });
         }
 
 
@@ -143,7 +144,12 @@ namespace Store.Controllers
 
             if (Request.Form["sortSelect"] == SortBy.Popularity.ToString())
             {
-                goods = goods.OrderBy(g => g.Reviews.Count).ToList();
+                foreach (var good in goods)
+                {
+                    good.Reviews = unitOfWork.Goods.GetReviews(good.Id).ToList();
+                }
+
+                goods = goods.OrderByDescending(g => g.Reviews.Count).ToList();
             }
 
             if (Request.Form["sortSelect"] == SortBy.PriceFromBigger.ToString())
@@ -160,7 +166,7 @@ namespace Store.Controllers
             HttpContext.Session.Set("filter", model);
             HttpContext.Session.Set("goods", goods);
 
-            return RedirectToAction("Index", new { pageNumber = 1 });
+            return RedirectToAction("Index", new { page = 1 });
         }
 
         private bool AddToResult(IndexViewModel model, Good good)
@@ -206,6 +212,31 @@ namespace Store.Controllers
             }
 
             return addToResult;
+        }
+
+        private IActionResult RedirectByRole(IndexViewModel model)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                firstTimeLogged = true;
+            }
+
+            if (firstTimeLogged)
+            {
+                if (User.IsInRole("admin"))
+                {
+                    firstTimeLogged = false;
+                    return RedirectToAction("Index", "Admin");
+                }
+
+                if (User.IsInRole("manager"))
+                {
+                    firstTimeLogged = false;
+                    return RedirectToAction("Index", "Manager");
+                }
+            }
+
+            return View("Index", model);
         }
     }
 }

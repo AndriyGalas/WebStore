@@ -34,14 +34,13 @@
 }
 
 .product-desc {
-    max-height: 60px;
+    max-height: 50px;
     overflow: hidden;
 }
 
 .product-price {
     bottom: 15px;
-    left: 0;
-    position: absolute;
+
     width: 100%;
     color: #d51e08;
     font-size: 18px;
@@ -71,7 +70,6 @@
 
 .rate {
     margin: 0;
-    margin-left: 85px;
     padding: 0;
     font-size: 0;
 }
@@ -86,17 +84,17 @@
         text-shadow: 0 1px #000, 0 -1px #000, 1px 0 #000, -1px 0 #000;
     }
 
-        .star:visited {
-            color: aqua;
-        }
+.star:visited {
+    color: aqua;
+}
 
-        .rate .star:before {
-            content: '\2605';
-        }
+.rate .star:before {
+    content: '\2605';
+}
 
-        .rate .star:hover ~ .star {
-            color: #fff;
-        }
+.rate .star:hover ~ .star {
+    color: #fff;
+}
 
 .good-link {
     color: black;
@@ -107,17 +105,53 @@
     }
 
 
-.cart-goods{
+.cart-goods {
     margin-top: 4rem;
 }
 
-.cart-goods img{
-    height: 10rem;
+.cart-good-image {
+    height: 8rem;
     width: 8rem;
 }
 
-    .cart-goods .cart-item {
-        font-size: 18px;
-        display: flex;
-        align-items: center;
+.cart-item {
+    font-size: 1.2vw;
+    display: flex;
+    align-items: center;
+}
+
+@media screen and (max-width: 767px) {
+    .cart-item {
+        font-size: 3vw;
+    }
+
+    .cart-good-image {
+        height: 8rem;
+        width: 8rem;
+    }
+}
+
+.pagination {
+    position: relative;
+}
+    .pagination li a {
+        padding: 0 0.5rem;
+        color: black;
+
+    }
+        .pagination .active a {
+            color: white;
+
+        }
+    .pagination li {
+        width: 2.2rem;
+        height: 2.2rem;
+        background-color: white;
+        border: 1px solid lightgray;
+        border-radius: 4px;
+        text-align: center; 
+    }
+
+    .pagination .active {
+        background-color: #0069D9;
     }

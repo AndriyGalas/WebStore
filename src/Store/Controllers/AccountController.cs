@@ -50,6 +50,15 @@ namespace Store.Controllers
         {
             if (ModelState.IsValid)
             {
+                foreach (var number in model.Phone)
+                {
+                    if (!char.IsDigit(number))
+                    {
+                        ViewBag.Message = "Phone number is invalid!";
+                        return View("ErrorPhonePage");
+                    }
+                }
+
                 ApplicationUser user = new ApplicationUser
                 {
                     Email = model.Email,
@@ -183,6 +192,15 @@ namespace Store.Controllers
 
             if (customer != null)
             {
+                foreach (var number in model.Phone)
+                {
+                    if (!char.IsDigit(number))
+                    {
+                        ViewBag.Message = "Phone number is invalid!";
+                        return View("EditPhoneError");
+                    }
+                }
+                
                 customer.FirstName = model.FirstName;
                 customer.SecondName = model.SecondName;
                 customer.Phone = model.Phone;

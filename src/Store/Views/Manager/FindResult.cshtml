@@ -3,7 +3,10 @@
     ViewBag.Title = "Find result";
 }
 
-
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+<link rel="stylesheet" href="~/css/site.css" />
+<link rel="stylesheet" href="~/css/cart.css"/>
+<link rel="stylesheet" href="~/css/footer.css"/>
 <div class="input-group">
     <h2 class="">Founded @Model.Count() records : </h2>
     <span class="input-group-btn">
@@ -20,6 +23,7 @@
         <th>City</th>
         <th>Street</th>
         <th>Status</th>
+        <th>Price</th>
         <th></th>
     </tr>
     @foreach (var order in Model)
@@ -32,6 +36,7 @@
             <td>@order.EndPointCity</td>
             <td>@order.EndPointStreet</td>
             <td>@order.OrderStatus</td>
+            <td>@order.CommonPrice</td>
             <td>
                 <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@order.Id">Edit</a>
                 <a class="btn btn-sm btn-warning" asp-action="ChangeStatus" asp-route-id="@order.Id">Change status</a>

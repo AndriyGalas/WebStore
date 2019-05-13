@@ -7,6 +7,8 @@ using DAL.Classes.UnitOfWork;
 using DAL.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Store.Helpers;
 using Store.ViewModels;
 
 namespace Store.Controllers
@@ -14,13 +16,15 @@ namespace Store.Controllers
     public class CartController : Controller
     {
         private readonly UnitOfWork unitOfWork;
+        private readonly ErrorMessage errorMessage;
 
         public CartController(AppDbContext appDbContext)
         {
             this.unitOfWork = new UnitOfWork(appDbContext);
+            errorMessage = new ErrorMessage();
         }
 
-        [Authorize(Roles="customer")]
+        [Authorize(Roles = "customer")]
         [HttpGet]
         public async Task<IActionResult> ShowCart()
         {
@@ -97,19 +101,105 @@ namespace Store.Controllers
                     continue;
                 }
 
-                modelGoods.Add(new OrderPart { Good = goods[i].Good, Count = Convert.ToInt32(goodCount[i])});
+                modelGoods.Add(new OrderPart
+                {
+                    Good = goods[i].Good,
+                    Count = Convert.ToInt32(goodCount[i]),
+                    GoodId = goods[i].Good.Id
+                });
             }
 
-            ConfirmOrderView model = new ConfirmOrderView
+            if (modelGoods.Count != 0)
             {
-                Customer = customer,
-                Goods = modelGoods,
-                Storages = unitOfWork.Storages.GetAll().ToList(),
-                Count = Convert.ToInt32(Request.Form["goodCommonCount"]),
+                ConfirmOrderView model = new ConfirmOrderView
+                {
+                    Country = new Country(),
+                    Customer = customer,
+                    Goods = modelGoods,
+                    Storages = await this.GetStorages(modelGoods),
+                    Count = Convert.ToInt32(Request.Form["goodCommonCount"]),
+                    CommonPrice = Convert.ToInt32(Request.Form["commonPrice"])
+                };
+
+                HttpContext.Session.Set("orderConfirm", model);
+
+                return View("ConfirmOrder", model);
+            }
+            else
+            {
+                ViewBag.Message = "You cannot buy nothing!";
+                return View("ErrorPage");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmOrder(ConfirmOrderView formModel)
+        {
+            ConfirmOrderView model = HttpContext.Session.Get<ConfirmOrderView>("orderConfirm");
+
+            if (model == null)
+            {
+                return RedirectToAction("ShowCart", "Cart");
+            }
+
+            var date = DateTime.Now;
+
+            Order order = new Order
+            {
+                OrderDate = date,
+                CustomerId = model.Customer.Id,
+                OrderStatus = OrderStatus.Ordered,
+                EndPointCity = Request.Form["EndPointCity"],
+                EndPointStreet = formModel.EndPointStreet,
                 CommonPrice = Convert.ToInt32(Request.Form["commonPrice"])
             };
 
-            return View("ConfirmOrder", model);
+            unitOfWork.Orders.SetProducts(await GetGoodsAsync(model.Goods), order);
+            await unitOfWork.Orders.Create(order);
+            
+            foreach (var good in await GetGoodsAsync(model.Goods))
+            {
+                await this.RemoveFromCart(good.Id);
+            }
+            await unitOfWork.SaveAsync();
+
+            return RedirectToAction("ShowCart");
+        }
+
+        private async Task<List<Storage>> GetStorages(List<OrderPart> orderParts)
+        {
+            List<Storage> storages = await unitOfWork.Goods.GetGoodStorages(orderParts[0].GoodId);
+
+            if (storages.Count > 1)
+            {
+                foreach (var part in orderParts)
+                {
+                    if (storages.Intersect(await unitOfWork.Goods.GetGoodStorages(part.GoodId)).Count() == 0)
+                    {
+                        return new List<Storage>();
+                    }
+                    else
+                    {
+                        storages = storages.Intersect(await unitOfWork.Goods.GetGoodStorages(part.GoodId))
+                            .ToList();
+                    }
+                }
+            }
+
+            return storages.Distinct().ToList();
+        }
+
+        private async Task<List<Good>> GetGoodsAsync(List<OrderPart> orderParts)
+        {
+            List<Good> goods = new List<Good>();
+
+            foreach (var part in orderParts)
+            {
+                var good = await unitOfWork.Goods.Get(part.Good.Id);
+                goods.Add(good);
+            }
+
+            return goods;
         }
     }
 }

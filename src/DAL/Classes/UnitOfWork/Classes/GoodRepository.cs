@@ -98,22 +98,24 @@ namespace DAL.Classes.UnitOfWork.Classes
             return reviews;
         }
 
-        public List<GoodReview> GetAllReviews()
-        {
-            List<GoodReview> reviews = applicationContext.Reviews.ToList();
-
-            return reviews;
-        }
-
         public async Task AddReview(GoodReview review, Good good)
         {
             review.Good = good;
             await applicationContext.Reviews.AddAsync(review);
         }
 
-        public void DeleteReview(GoodReview review)
+        public async Task<List<Storage>> GetGoodStorages(int goodId)
         {
-            applicationContext.Reviews.Remove(review);
+            List<Storage> storages = new List<Storage>();
+            List<GoodStorage> goodStorages = applicationContext.GoodStorage.Where(g => g.GoodId == goodId)
+                .ToList();
+
+            foreach (var goodStorage in goodStorages)
+            {
+                storages.Add(await applicationContext.Storages.FindAsync(goodStorage.StorageId));
+            }
+
+            return storages;
         }
     }
 }
